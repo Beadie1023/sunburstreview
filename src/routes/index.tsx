@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { submitReview } from "@/lib/reviews.functions";
+import { submitFollowUp, submitReview } from "@/lib/reviews.functions";
 
 const GOOGLE_REVIEW_URL =
   "https://search.google.com/local/writereview?placeid=ChIJpUjOyc1jL4kRvPNUEOdCQL4";
