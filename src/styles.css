@@ -157,6 +157,10 @@
 
   body {
     background-color: var(--color-background);
+    background-image: var(--gradient-warm-wash);
+    background-repeat: no-repeat;
     color: var(--color-foreground);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
   }
 }
