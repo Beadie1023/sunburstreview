@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { submitFollowUp, submitReview } from "@/lib/reviews.functions";
+import { submitReview } from "@/lib/reviews.functions";
 
 const localBusinessSchema = {
   "@context": "https://schema.org",
@@ -50,11 +50,10 @@ export const Route = createFileRoute("/")({
   component: ReviewPage,
 });
 
-type Screen = "form" | "thanks" | "improve" | "closed";
+type Screen = "form" | "closed";
 
 function ReviewPage() {
   const send = useServerFn(submitReview);
-  const sendFollowUp = useServerFn(submitFollowUp);
 
   const [screen, setScreen] = useState<Screen>("form");
   const [rating, setRating] = useState(0);
@@ -62,9 +61,7 @@ function ReviewPage() {
   const [useCase, setUseCase] = useState("");
   const [wouldRecommend, setWouldRecommend] = useState<boolean | null>(null);
   const [comment, setComment] = useState("");
-  const [followUp, setFollowUp] = useState("");
   const [website, setWebsite] = useState("");
-  const [reviewId, setReviewId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -87,32 +84,18 @@ function ReviewPage() {
     setBusy(true);
 
     try {
-      const result = await send({
+      await send({
         data: { rating, useCase, wouldRecommend, comment, website },
       });
 
-      // Go directly to Google's review form.
-      window.location.href = "https://g.page/r/CbzzVBDnQkC-EAE/review";
-    } catch {
-      setError("Something went wrong. Please try again.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function handleFollowUp(event: React.FormEvent) {
-    event.preventDefault();
-    setBusy(true);
-    setError(null);
-
-    try {
-      if (reviewId) {
-        await sendFollowUp({
-          data: { reviewId, comment: followUp, website },
-        });
+      if (rating >= 4) {
+        // Go directly to Google's review form — one screen, no second survey.
+        window.location.href = "https://g.page/r/CbzzVBDnQkC-EAE/review";
+      } else {
+        // 1-3 stars: everything already collected on this screen goes
+        // straight to the owner's inbox. No second form for the customer.
+        setScreen("closed");
       }
-
-      setScreen("closed");
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -231,62 +214,6 @@ function ReviewPage() {
           </Field>
 
           <Honeypot value={website} onChange={setWebsite} />
-
-          {error && <p className="text-sm text-destructive">{error}</p>}
-
-          <SubmitButton busy={busy}>Submit</SubmitButton>
-        </form>
-      )}
-
-      {screen === "thanks" && (
-        <section
-          className="mt-10 flex flex-col gap-6 rounded-3xl border border-border bg-card p-7 text-center"
-          style={{ boxShadow: "var(--shadow-lift)" }}
-        >
-          <h1 className="font-display text-[1.7rem] leading-tight text-balance">
-            We're so glad to hear that!
-          </h1>
-
-          <p className="text-base leading-relaxed text-muted-foreground">
-            Would you mind sharing it on Google? It really helps our small
-            Bahamian business.
-          </p>
-
-          <a
-            href="https://g.page/r/CbzzVBDnQkC-EAE/review"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex h-16 items-center justify-center rounded-2xl text-base font-semibold text-primary-foreground transition-transform duration-200 active:scale-[0.98]"
-            style={{
-              backgroundImage: "var(--gradient-sunburst)",
-              boxShadow: "var(--shadow-soft)",
-            }}
-          >
-            Leave a Google Review
-          </a>
-
-          <StarRow count={rating} />
-        </section>
-      )}
-
-      {screen === "improve" && (
-        <form onSubmit={handleFollowUp} className="mt-10 flex flex-col gap-6">
-          <h1 className="font-display text-[1.7rem] leading-tight text-balance">
-            What can we change?
-          </h1>
-
-          <p className="text-base leading-relaxed text-muted-foreground">
-            Thanks for letting us know — we'd like to make this right.
-          </p>
-
-          <textarea
-            value={followUp}
-            onChange={(e) => setFollowUp(e.target.value)}
-            rows={6}
-            autoFocus
-            placeholder="Tell us what happened"
-            className="w-full resize-none rounded-2xl border border-border bg-card p-4 text-base placeholder:text-muted-foreground/70 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-          />
 
           {error && <p className="text-sm text-destructive">{error}</p>}
 
