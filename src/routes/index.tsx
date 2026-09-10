@@ -1,4 +1,3 @@
-```tsx
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
@@ -97,9 +96,16 @@ function ReviewPage() {
 
       setReviewId(result.reviewId);
 
-      // Send every customer directly to Google's review form
-      // after their feedback has been saved.
-      window.location.href = GOOGLE_REVIEW_URL;
+      // Route to different screen based on rating
+      if (rating <= 2) {
+        setScreen("improve");
+      } else {
+        setScreen("thanks");
+        // Redirect to Google review after a brief delay for positive feedback
+        setTimeout(() => {
+          window.location.href = GOOGLE_REVIEW_URL;
+        }, 1500);
+      }
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -188,7 +194,7 @@ function ReviewPage() {
               value={useCase}
               onChange={(e) => setUseCase(e.target.value)}
               placeholder="e.g. Interior walls, Exterior paint, Roof coating"
-              className="h-14 w-full rounded-2xl border border-border bg-card px-4 text-base placeholder:text-muted-foreground/70 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none"
+              className="h-14 w-full rounded-2xl border border-border bg-card px-4 text-base placeholder:text-muted-foreground/70 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
             />
           </Field>
 
@@ -232,7 +238,7 @@ function ReviewPage() {
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               rows={4}
-              className="w-full resize-none rounded-2xl border border-border bg-card p-4 text-base placeholder:text-muted-foreground/70 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none"
+              className="w-full resize-none rounded-2xl border border-border bg-card p-4 text-base placeholder:text-muted-foreground/70 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
               placeholder="Anything we could do better?"
             />
           </Field>
@@ -292,7 +298,7 @@ function ReviewPage() {
             rows={6}
             autoFocus
             placeholder="Tell us what happened"
-            className="w-full resize-none rounded-2xl border border-border bg-card p-4 text-base placeholder:text-muted-foreground/70 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none"
+            className="w-full resize-none rounded-2xl border border-border bg-card p-4 text-base placeholder:text-muted-foreground/70 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
           />
 
           {error && <p className="text-sm text-destructive">{error}</p>}
@@ -447,7 +453,7 @@ function StarRow({ count }: { count: number }) {
       {Array.from({ length: count }).map((_, index) => (
         <svg key={index} viewBox="0 0 24 24" className="h-4 w-4" aria-hidden>
           <path
-            d="M12 2.6l2.9 5.9 6.5.95-4.7 4.6 1.1 6.45L12 17.45 6.2 20.5l1.1-6.45-4.7-4.6-6.5-.95L12 2.6z"
+            d="M12 2.6l2.9 5.9 6.5.95-4.7 4.6 1.1 6.45L12 17.45 6.2 20.5l1.1-6.45-4.7-4.6 6.5-.95L12 2.6z"
             fill="currentColor"
           />
         </svg>
@@ -483,4 +489,3 @@ function SunMark() {
     </svg>
   );
 }
-```
