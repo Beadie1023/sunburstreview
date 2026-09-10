@@ -57,6 +57,7 @@ type Screen = "form" | "thanks" | "improve" | "closed";
 
 function ReviewPage() {
   const send = useServerFn(submitReview);
+  const sendFollowUp = useServerFn(submitFollowUp);
 
   const [screen, setScreen] = useState<Screen>("form");
   const [rating, setRating] = useState(0);
@@ -66,6 +67,7 @@ function ReviewPage() {
   const [comment, setComment] = useState("");
   const [followUp, setFollowUp] = useState("");
   const [website, setWebsite] = useState("");
+  const [reviewId, setReviewId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -86,9 +88,10 @@ function ReviewPage() {
 
     setBusy(true);
     try {
-      await send({
+      const result = await send({
         data: { rating, useCase, wouldRecommend, comment, website },
       });
+      setReviewId(result.reviewId);
       setScreen(rating >= 4 ? "thanks" : "improve");
     } catch {
       setError("Something went wrong. Please try again.");
@@ -102,15 +105,9 @@ function ReviewPage() {
     setBusy(true);
     setError(null);
     try {
-      await send({
-        data: {
-          rating,
-          useCase,
-          wouldRecommend: wouldRecommend ?? false,
-          comment: [comment, followUp].filter(Boolean).join("\n\n"),
-          website,
-        },
-      });
+      if (reviewId) {
+        await sendFollowUp({ data: { reviewId, comment: followUp, website } });
+      }
       setScreen("closed");
     } catch {
       setError("Something went wrong. Please try again.");
