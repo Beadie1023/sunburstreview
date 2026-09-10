@@ -290,25 +290,49 @@ function Field({
   label,
   hint,
   required,
+  htmlFor,
   children,
 }: {
   label: string;
   hint?: string;
   required?: boolean;
+  htmlFor?: string;
   children: React.ReactNode;
 }) {
-  return (
-    <label className="flex flex-col gap-3">
-      <span className="flex items-baseline gap-2 text-sm font-medium tracking-wide text-secondary-foreground">
-        {label}
-        {required && <span className="text-primary">*</span>}
-        {hint && (
-          <span className="text-xs font-normal text-muted-foreground">{hint}</span>
-        )}
-      </span>
-      {children}
-    </label>
+  const heading = (
+    <span
+      id={htmlFor ? undefined : `${slug(label)}-label`}
+      className="flex items-baseline gap-2 text-sm font-medium tracking-wide text-secondary-foreground"
+    >
+      {label}
+      {required && <span className="text-primary">*</span>}
+      {hint && <span className="text-xs font-normal text-muted-foreground">{hint}</span>}
+    </span>
   );
+
+  if (htmlFor) {
+    return (
+      <div className="flex flex-col gap-3">
+        <label htmlFor={htmlFor}>{heading}</label>
+        {children}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      role="group"
+      aria-labelledby={`${slug(label)}-label`}
+      className="flex flex-col gap-3"
+    >
+      {heading}
+      {children}
+    </div>
+  );
+}
+
+function slug(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
 
 function SubmitButton({
