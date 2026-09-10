@@ -169,8 +169,9 @@ function ReviewPage() {
             </div>
           </Field>
 
-          <Field label="What did you use Sunburst Paints for?">
+          <Field label="What did you use Sunburst Paints for?" htmlFor="use-case">
             <input
+              id="use-case"
               value={useCase}
               onChange={(e) => setUseCase(e.target.value)}
               placeholder="e.g. Interior walls, Exterior paint, Roof coating"
