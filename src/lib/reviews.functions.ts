@@ -12,18 +12,17 @@ const reviewSchema = z.object({
   website: z.string().max(200).optional().default(""),
 });
 
-const followUpSchema = z.object({
-  reviewId: z.string().uuid(),
-  comment: z.string().max(2000).optional().default(""),
-  website: z.string().max(200).optional().default(""),
-});
-
-/** Saves the first screen. No email yet: low ratings get one after the follow-up note. */
+/**
+ * Saves the single-screen review. 4-5 stars: the client redirects straight to
+ * Google — nothing else to do here. 1-3 stars: we email the owner immediately
+ * with everything already collected, so the customer never has to fill out a
+ * second form.
+ */
 export const submitReview = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => reviewSchema.parse(input))
   .handler(async ({ data }) => {
     if (data.website.trim() !== "") {
-      return { ok: true as const, reviewId: null };
+      return { ok: true as const };
     }
 
     const comment = data.comment.trim();
@@ -42,7 +41,7 @@ export const submitReview = createServerFn({ method: "POST" })
         would_recommend: data.wouldRecommend,
         comment: comment || null,
       })
-      .select("id")
+      .select("id, created_at")
       .single();
 
     if (error || !row) {
@@ -50,90 +49,68 @@ export const submitReview = createServerFn({ method: "POST" })
       throw new Error("Could not save your feedback. Please try again.");
     }
 
-    return { ok: true as const, reviewId: row.id };
+    if (data.rating <= 3) {
+      await alertOwner({
+        rating: data.rating,
+        useCase,
+        wouldRecommend: data.wouldRecommend,
+        comment,
+        createdAt: row.created_at,
+      });
+    }
+
+    return { ok: true as const };
   });
 
-/** Adds the "what can we change" note to an existing low rating and alerts the owner. */
-export const submitFollowUp = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => followUpSchema.parse(input))
-  .handler(async ({ data }) => {
-    if (data.website.trim() !== "") {
-      return { ok: true as const, emailed: false };
-    }
+async function alertOwner(input: {
+  rating: number;
+  useCase: string;
+  wouldRecommend: boolean;
+  comment: string;
+  createdAt: string;
+}) {
+  const resendKey = process.env["RESEND_API_KEY"];
+  if (!resendKey) {
+    console.error("RESEND_API_KEY is not configured; skipping owner alert email");
+    return;
+  }
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
-    const { data: existing, error: readError } = await supabaseAdmin
-      .from("reviews")
-      .select("id, rating, use_case, would_recommend, comment, created_at")
-      .eq("id", data.reviewId)
-      .single();
-
-    if (readError || !existing) {
-      console.error("Follow-up for unknown review", readError);
-      throw new Error("Could not save your message. Please try again.");
-    }
-
-    const followUp = data.comment.trim();
-    const merged = [existing.comment, followUp].filter(Boolean).join("\n\n");
-
-    if (followUp) {
-      const { error: updateError } = await supabaseAdmin
-        .from("reviews")
-        .update({ comment: merged })
-        .eq("id", existing.id);
-
-      if (updateError) {
-        console.error("Failed to update review", updateError);
-        throw new Error("Could not save your message. Please try again.");
-      }
-    }
-
-    const resendKey = process.env["RESEND_API_KEY"];
-    if (!resendKey) {
-      console.error("RESEND_API_KEY is not configured; skipping owner alert email");
-      return { ok: true as const, emailed: false };
-    }
-
-    const timestamp = new Date(existing.created_at).toLocaleString("en-US", {
-      timeZone: "America/Nassau",
-      dateStyle: "full",
-      timeStyle: "short",
-    });
-
-    const html = `
-      <div style="font-family:Helvetica,Arial,sans-serif;font-size:15px;color:#1c1917">
-        <h2 style="margin:0 0 16px">New customer feedback (${existing.rating} / 5)</h2>
-        <p style="margin:0 0 8px"><strong>Rating:</strong> ${existing.rating} out of 5</p>
-        <p style="margin:0 0 8px"><strong>Used the paint for:</strong> ${escapeHtml(existing.use_case ?? "") || "—"}</p>
-        <p style="margin:0 0 8px"><strong>Would recommend:</strong> ${existing.would_recommend ? "Yes" : "No"}</p>
-        <p style="margin:0 0 8px"><strong>What they told us:</strong><br>${escapeHtml(merged) || "—"}</p>
-        <p style="margin:16px 0 0;color:#78716c"><strong>Submitted:</strong> ${timestamp} (Nassau)</p>
-      </div>
-    `;
-
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${resendKey}`,
-      },
-      body: JSON.stringify({
-        from: "Sunburst Feedback <onboarding@resend.dev>",
-        to: [OWNER_EMAIL],
-        subject: `Sunburst Paints — ${existing.rating}-star feedback`,
-        html,
-      }),
-    });
-
-    if (!response.ok) {
-      const body = await response.text();
-      console.error(`Resend request failed [${response.status}]: ${body}`);
-      return { ok: true as const, emailed: false };
-    }
-
-    return { ok: true as const, emailed: true };
+  const timestamp = new Date(input.createdAt).toLocaleString("en-US", {
+    timeZone: "America/Nassau",
+    dateStyle: "full",
+    timeStyle: "short",
   });
+
+  const html = `
+    <div style="font-family:Helvetica,Arial,sans-serif;font-size:15px;color:#1c1917">
+      <h2 style="margin:0 0 16px">New customer feedback (${input.rating} / 5)</h2>
+      <p style="margin:0 0 8px"><strong>Rating:</strong> ${input.rating} out of 5</p>
+      <p style="margin:0 0 8px"><strong>Used the paint for:</strong> ${escapeHtml(input.useCase) || "—"}</p>
+      <p style="margin:0 0 8px"><strong>Would recommend:</strong> ${input.wouldRecommend ? "Yes" : "No"}</p>
+      <p style="margin:0 0 8px"><strong>How we can improve:</strong><br>${escapeHtml(input.comment) || "—"}</p>
+      <p style="margin:16px 0 0;color:#78716c"><strong>Submitted:</strong> ${timestamp} (Nassau)</p>
+    </div>
+  `;
+
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${resendKey}`,
+    },
+    body: JSON.stringify({
+      from: "Sunburst Feedback <onboarding@resend.dev>",
+      to: [OWNER_EMAIL],
+      subject: `Sunburst Paints — ${input.rating}-star feedback`,
+      html,
+    }),
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    console.error(`Resend request failed [${response.status}]: ${body}`);
+  }
+}
 
 function escapeHtml(value: string) {
   return value
