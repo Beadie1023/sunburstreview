@@ -1,10 +1,11 @@
+```tsx
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { submitFollowUp, submitReview } from "@/lib/reviews.functions";
 
 const GOOGLE_REVIEW_URL =
-  "https://search.google.com/local/writereview?placeid=ChIJpUjOyc1jL4kRvPNUEOdCQL4";
+  "https://g.page/r/CbzzVBDnQkC-EAE/review";
 
 const localBusinessSchema = {
   "@context": "https://schema.org",
@@ -81,18 +82,24 @@ function ReviewPage() {
       setError("Please tap a star rating.");
       return;
     }
+
     if (wouldRecommend === null) {
       setError("Please let us know if you'd recommend us.");
       return;
     }
 
     setBusy(true);
+
     try {
       const result = await send({
         data: { rating, useCase, wouldRecommend, comment, website },
       });
+
       setReviewId(result.reviewId);
-      setScreen(rating >= 4 ? "thanks" : "improve");
+
+      // Send every customer directly to Google's review form
+      // after their feedback has been saved.
+      window.location.href = GOOGLE_REVIEW_URL;
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -104,10 +111,14 @@ function ReviewPage() {
     event.preventDefault();
     setBusy(true);
     setError(null);
+
     try {
       if (reviewId) {
-        await sendFollowUp({ data: { reviewId, comment: followUp, website } });
+        await sendFollowUp({
+          data: { reviewId, comment: followUp, website },
+        });
       }
+
       setScreen("closed");
     } catch {
       setError("Something went wrong. Please try again.");
@@ -120,9 +131,11 @@ function ReviewPage() {
     <main className="mx-auto flex min-h-screen w-full max-w-[30rem] flex-col px-5 pb-16 pt-10">
       <header className="text-center">
         <SunMark />
+
         <p className="mt-5 font-display text-[0.7rem] tracking-[0.32em] text-muted-foreground uppercase">
           Sunburst Paints &amp; Coatings
         </p>
+
         <p className="mt-1 text-[0.7rem] tracking-[0.22em] text-muted-foreground/80 uppercase">
           Nassau, Bahamas
         </p>
@@ -166,7 +179,10 @@ function ReviewPage() {
             </div>
           </Field>
 
-          <Field label="What did you use Sunburst Paints for?" htmlFor="use-case">
+          <Field
+            label="What did you use Sunburst Paints for?"
+            htmlFor="use-case"
+          >
             <input
               id="use-case"
               value={useCase}
@@ -176,13 +192,17 @@ function ReviewPage() {
             />
           </Field>
 
-          <Field label="Would you recommend us to your friends and family?" required>
+          <Field
+            label="Would you recommend us to your friends and family?"
+            required
+          >
             <div className="grid grid-cols-2 gap-3">
               {[
                 { value: true, label: "Yes" },
                 { value: false, label: "No" },
               ].map((option) => {
                 const selected = wouldRecommend === option.value;
+
                 return (
                   <button
                     key={option.label}
@@ -202,7 +222,11 @@ function ReviewPage() {
             </div>
           </Field>
 
-          <Field label="How can we improve?" hint="Optional" htmlFor="improve">
+          <Field
+            label="How can we improve?"
+            hint="Optional"
+            htmlFor="improve"
+          >
             <textarea
               id="improve"
               value={comment}
@@ -222,14 +246,19 @@ function ReviewPage() {
       )}
 
       {screen === "thanks" && (
-        <section className="mt-10 flex flex-col gap-6 rounded-3xl border border-border bg-card p-7 text-center" style={{ boxShadow: "var(--shadow-lift)" }}>
+        <section
+          className="mt-10 flex flex-col gap-6 rounded-3xl border border-border bg-card p-7 text-center"
+          style={{ boxShadow: "var(--shadow-lift)" }}
+        >
           <h1 className="font-display text-[1.7rem] leading-tight text-balance">
             We're so glad to hear that!
           </h1>
+
           <p className="text-base leading-relaxed text-muted-foreground">
-            Would you mind sharing it on Google? It really helps our small Bahamian
-            business.
+            Would you mind sharing it on Google? It really helps our small
+            Bahamian business.
           </p>
+
           <a
             href={GOOGLE_REVIEW_URL}
             target="_blank"
@@ -242,6 +271,7 @@ function ReviewPage() {
           >
             Leave a Google Review
           </a>
+
           <StarRow count={rating} />
         </section>
       )}
@@ -251,9 +281,11 @@ function ReviewPage() {
           <h1 className="font-display text-[1.7rem] leading-tight text-balance">
             What can we change?
           </h1>
+
           <p className="text-base leading-relaxed text-muted-foreground">
             Thanks for letting us know — we'd like to make this right.
           </p>
+
           <textarea
             value={followUp}
             onChange={(e) => setFollowUp(e.target.value)}
@@ -262,16 +294,22 @@ function ReviewPage() {
             placeholder="Tell us what happened"
             className="w-full resize-none rounded-2xl border border-border bg-card p-4 text-base placeholder:text-muted-foreground/70 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none"
           />
+
           {error && <p className="text-sm text-destructive">{error}</p>}
+
           <SubmitButton busy={busy}>Submit</SubmitButton>
         </form>
       )}
 
       {screen === "closed" && (
-        <section className="mt-10 rounded-3xl border border-border bg-card p-8 text-center" style={{ boxShadow: "var(--shadow-lift)" }}>
+        <section
+          className="mt-10 rounded-3xl border border-border bg-card p-8 text-center"
+          style={{ boxShadow: "var(--shadow-lift)" }}
+        >
           <h1 className="font-display text-[1.6rem] leading-tight text-balance">
             Thank you — we've got your message.
           </h1>
+
           <p className="mt-4 text-base leading-relaxed text-muted-foreground">
             The owner reads every note personally.
           </p>
@@ -304,8 +342,14 @@ function Field({
       className="flex items-baseline gap-2 text-sm font-medium tracking-wide text-secondary-foreground"
     >
       {label}
+
       {required && <span className="text-primary">*</span>}
-      {hint && <span className="text-xs font-normal text-muted-foreground">{hint}</span>}
+
+      {hint && (
+        <span className="text-xs font-normal text-muted-foreground">
+          {hint}
+        </span>
+      )}
     </span>
   );
 
@@ -331,7 +375,10 @@ function Field({
 }
 
 function slug(value: string) {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 }
 
 function SubmitButton({
@@ -367,6 +414,7 @@ function Honeypot({
     <div aria-hidden className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
       <label>
         Website
+
         <input
           tabIndex={-1}
           autoComplete="off"
@@ -399,7 +447,7 @@ function StarRow({ count }: { count: number }) {
       {Array.from({ length: count }).map((_, index) => (
         <svg key={index} viewBox="0 0 24 24" className="h-4 w-4" aria-hidden>
           <path
-            d="M12 2.6l2.9 5.9 6.5.95-4.7 4.6 1.1 6.45L12 17.45 6.2 20.5l1.1-6.45-4.7-4.6 6.5-.95L12 2.6z"
+            d="M12 2.6l2.9 5.9 6.5.95-4.7 4.6 1.1 6.45L12 17.45 6.2 20.5l1.1-6.45-4.7-4.6-6.5-.95L12 2.6z"
             fill="currentColor"
           />
         </svg>
@@ -417,6 +465,7 @@ function SunMark() {
           <stop offset="100%" stopColor="oklch(0.64 0.19 42)" />
         </linearGradient>
       </defs>
+
       {Array.from({ length: 16 }).map((_, index) => (
         <rect
           key={index}
@@ -429,7 +478,9 @@ function SunMark() {
           transform={`rotate(${index * 22.5} 60 60)`}
         />
       ))}
+
       <circle cx="60" cy="60" r="27" fill="url(#sunburst)" />
     </svg>
   );
 }
+```
