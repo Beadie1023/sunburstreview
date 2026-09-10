@@ -3,9 +3,6 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { submitFollowUp, submitReview } from "@/lib/reviews.functions";
 
-const GOOGLE_REVIEW_URL =
-  "https://g.page/r/CbzzVBDnQkC-EAE/review";
-
 const localBusinessSchema = {
   "@context": "https://schema.org",
   "@type": "HardwareStore",
@@ -94,18 +91,8 @@ function ReviewPage() {
         data: { rating, useCase, wouldRecommend, comment, website },
       });
 
-      setReviewId(result.reviewId);
-
-      // Route to different screen based on rating
-      if (rating <= 2) {
-        setScreen("improve");
-      } else {
-        setScreen("thanks");
-        // Redirect to Google review after a brief delay for positive feedback
-        setTimeout(() => {
-          window.location.href = GOOGLE_REVIEW_URL;
-        }, 1500);
-      }
+      // Go directly to Google's review form.
+      window.location.href = "https://g.page/r/CbzzVBDnQkC-EAE/review";
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -266,7 +253,7 @@ function ReviewPage() {
           </p>
 
           <a
-            href={GOOGLE_REVIEW_URL}
+            href="https://g.page/r/CbzzVBDnQkC-EAE/review"
             target="_blank"
             rel="noopener noreferrer"
             className="flex h-16 items-center justify-center rounded-2xl text-base font-semibold text-primary-foreground transition-transform duration-200 active:scale-[0.98]"
