@@ -1,7 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import type { Database } from "@/integrations/supabase/types";
 
 const OWNER_EMAIL = "sunburstpaints242@gmail.com";
 
@@ -20,23 +18,6 @@ const followUpSchema = z.object({
   website: z.string().max(200).optional().default(""),
 });
 
-function publicClient() {
-  const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
-  return createClient<Database>(process.env["SUPABASE_URL"]!, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
-    global: {
-      fetch: (input, init) => {
-        const headers = new Headers(init?.headers);
-        if (key.startsWith("sb_") && headers.get("Authorization") === `Bearer ${key}`) {
-          headers.delete("Authorization");
-        }
-        headers.set("apikey", key);
-        return fetch(input, { ...init, headers });
-      },
-    },
-  });
-}
-
 /** Saves the first screen. No email yet: low ratings get one after the follow-up note. */
 export const submitReview = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => reviewSchema.parse(input))
@@ -48,7 +29,12 @@ export const submitReview = createServerFn({ method: "POST" })
     const comment = data.comment.trim();
     const useCase = data.useCase.trim();
 
-    const { data: row, error } = await publicClient()
+    // Runs server-side only, so it's safe to use the admin client here.
+    // The anon key can INSERT but has no SELECT policy, so it can't read
+    // the row back after inserting — the admin client bypasses that.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: row, error } = await supabaseAdmin
       .from("reviews")
       .insert({
         rating: data.rating,
