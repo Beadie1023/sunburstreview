@@ -205,8 +205,9 @@ function ReviewPage() {
             </div>
           </Field>
 
-          <Field label="How can we improve?" hint="Optional">
+          <Field label="How can we improve?" hint="Optional" htmlFor="improve">
             <textarea
+              id="improve"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               rows={4}
