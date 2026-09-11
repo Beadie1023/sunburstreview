@@ -68,7 +68,6 @@ function ReviewPage() {
   const [comment, setComment] = useState("");
   const [followUp, setFollowUp] = useState("");
   const [website, setWebsite] = useState("");
-  const [reviewId, setReviewId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -89,10 +88,9 @@ function ReviewPage() {
 
     setBusy(true);
     try {
-      const result = await send({
-        data: { rating, useCase, wouldRecommend, comment, website },
+      await send({
+        data: { rating, useCase, wouldRecommend, comment, followUp: "", website },
       });
-      setReviewId(result.reviewId);
       setScreen(rating >= 4 ? "thanks" : "improve");
     } catch {
       setError("Something went wrong. Please try again.");
@@ -106,9 +104,16 @@ function ReviewPage() {
     setBusy(true);
     setError(null);
     try {
-      if (reviewId) {
-        await sendFollowUp({ data: { reviewId, comment: followUp, website } });
-      }
+      await sendFollowUp({
+        data: {
+          rating,
+          useCase,
+          wouldRecommend: wouldRecommend ?? false,
+          comment,
+          followUp,
+          website,
+        },
+      });
       setScreen("closed");
     } catch {
       setError("Something went wrong. Please try again.");
