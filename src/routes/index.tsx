@@ -108,7 +108,12 @@ function ReviewPage() {
       <header className="text-center">
         <SunMark />
 
-        <p className="mt-5 font-display text-[0.7rem] tracking-[0.32em] text-muted-foreground uppercase">
+        <p className="mt-3 font-display text-2xl leading-none">
+          <span className="text-navy">SunBurst</span>
+          <span className="text-pink">Paint</span>
+        </p>
+
+        <p className="mt-3 font-display text-[0.7rem] tracking-[0.32em] text-muted-foreground uppercase">
           Sunburst Paints &amp; Coatings
         </p>
 
@@ -376,30 +381,33 @@ function StarRow({ count }: { count: number }) {
   );
 }
 
-function SunMark() {
-  return (
-    <svg viewBox="0 0 120 120" className="mx-auto h-20 w-20" aria-hidden>
-      <defs>
-        <linearGradient id="sunburst" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="oklch(0.86 0.15 84)" />
-          <stop offset="100%" stopColor="oklch(0.64 0.19 42)" />
-        </linearGradient>
-      </defs>
+const PINWHEEL_COLORS = [
+  "var(--color-pin-blue)",
+  "var(--color-pin-teal)",
+  "var(--color-pin-green)",
+  "var(--color-pin-yellowgreen)",
+  "var(--color-pin-yellow)",
+  "var(--color-pin-orange)",
+  "var(--color-pin-red)",
+  "var(--color-pin-magenta)",
+];
 
-      {Array.from({ length: 16 }).map((_, index) => (
-        <rect
+function SunMark() {
+  const petals = PINWHEEL_COLORS.length;
+  const step = 360 / petals;
+
+  return (
+    <svg viewBox="0 0 120 120" className="mx-auto h-16 w-16" aria-hidden>
+      {PINWHEEL_COLORS.map((color, index) => (
+        <path
           key={index}
-          x="59"
-          y="6"
-          width="2"
-          height="16"
-          rx="1"
-          fill="url(#sunburst)"
-          transform={`rotate(${index * 22.5} 60 60)`}
+          d="M60 60 L60 14 A46 46 0 0 1 96 34 Z"
+          fill={color}
+          transform={`rotate(${index * step} 60 60)`}
         />
       ))}
 
-      <circle cx="60" cy="60" r="27" fill="url(#sunburst)" />
+      <circle cx="60" cy="60" r="17" fill="var(--color-background)" />
     </svg>
   );
 }
