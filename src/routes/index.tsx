@@ -121,10 +121,7 @@ function ReviewPage() {
     <main className="mx-auto flex min-h-screen w-full max-w-[30rem] flex-col px-5 pb-16 pt-10">
       <header className="text-center">
         <SunMark />
-        <p className="mt-5 font-display text-[0.7rem] tracking-[0.32em] text-muted-foreground uppercase">
-          Sunburst Paints &amp; Coatings
-        </p>
-        <p className="mt-1 text-[0.7rem] tracking-[0.22em] text-muted-foreground/80 uppercase">
+        <p className="mt-3 text-[0.7rem] tracking-[0.22em] text-muted-foreground/80 uppercase">
           Nassau, Bahamas
         </p>
       </header>
