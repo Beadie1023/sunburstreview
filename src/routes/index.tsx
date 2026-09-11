@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { submitFollowUp, submitReview } from "@/lib/reviews.functions";
+import logoAsset from "@/assets/sunburst-logo.png.asset.json";
 
 const GOOGLE_REVIEW_URL =
   "https://search.google.com/local/writereview?placeid=ChIJpUjOyc1jL4kRvPNUEOdCQL4";
