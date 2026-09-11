@@ -410,26 +410,10 @@ function StarRow({ count }: { count: number }) {
 
 function SunMark() {
   return (
-    <svg viewBox="0 0 120 120" className="mx-auto h-20 w-20" aria-hidden>
-      <defs>
-        <linearGradient id="sunburst" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="oklch(0.86 0.15 84)" />
-          <stop offset="100%" stopColor="oklch(0.64 0.19 42)" />
-        </linearGradient>
-      </defs>
-      {Array.from({ length: 16 }).map((_, index) => (
-        <rect
-          key={index}
-          x="59"
-          y="6"
-          width="2"
-          height="16"
-          rx="1"
-          fill="url(#sunburst)"
-          transform={`rotate(${index * 22.5} 60 60)`}
-        />
-      ))}
-      <circle cx="60" cy="60" r="27" fill="url(#sunburst)" />
-    </svg>
+    <img
+      src={logoAsset.url}
+      alt="Sunburst Paints & Coatings — Superior Quality Paints"
+      className="mx-auto w-full max-w-[19rem]"
+    />
   );
 }
