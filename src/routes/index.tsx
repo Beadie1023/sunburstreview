@@ -416,7 +416,7 @@ function SunMark() {
     <img
       src={logoAsset.url}
       alt="Sunburst Paints & Coatings — Superior Quality Paints"
-      className="mx-auto w-full max-w-[19rem]"
+      className="mx-auto w-full max-w-[19rem] rounded-2xl bg-white p-2"
     />
   );
 }
