@@ -48,7 +48,10 @@ export const submitReview = createServerFn({ method: "POST" })
     const comment = data.comment.trim();
     const useCase = data.useCase.trim();
 
-    const { data: row, error } = await publicClient()
+    // Insert server-side: the public role may insert but not read back the new id.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: row, error } = await supabaseAdmin
       .from("reviews")
       .insert({
         rating: data.rating,
