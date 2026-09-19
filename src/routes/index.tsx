@@ -203,7 +203,7 @@ function ReviewPage() {
         <SubmitButton busy={busy}>Submit</SubmitButton>
       </form>
 
-      <div className="mt-8 grid grid-cols-2 gap-3">
+      <div className="mt-8">
         <a
           href="https://sunburstbahamas.com"
           target="_blank"
@@ -211,15 +211,6 @@ function ReviewPage() {
           className="flex h-14 items-center justify-center rounded-2xl border border-border bg-card text-base font-semibold text-foreground transition-transform duration-200 active:scale-[0.98]"
         >
           Visit Website
-        </a>
-
-        <a
-          href="https://www.google.com/maps/dir/?api=1&destination=Sunburst+Paints+%26+Coatings&destination_place_id=ChIJpUjOyc1jL4kRvPNUEOdCQL4"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex h-14 items-center justify-center rounded-2xl border border-border bg-card text-base font-semibold text-foreground transition-transform duration-200 active:scale-[0.98]"
-        >
-          Get Directions
         </a>
       </div>
 
